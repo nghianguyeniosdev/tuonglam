@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thử Tài So Sánh Số</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Canvas Confetti for winning effects -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Tone.js for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <!-- Custom Fonts & Keyframes -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #fdf2f8; /* pink-50 */
+            touch-action: manipulation; /* Disable double-tap to zoom */
+        }
+
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .float-anim {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const questions = [
+            {
+                id: 1,
+                text: "4 ☐ 6",
+                visual: null,
+                options: ["A. >", "B. <", "C. ="],
+                correctAnswer: 1, // Index of 'B. <'
+                explanation: "4 bé hơn 6 nên ta chọn dấu <."
+            },
+            {
+                id: 2,
+                text: "8 ☐ 5",
+                visual: null,
+                options: ["A. >", "B. <", "C. ="],
+                correctAnswer: 0,
+                explanation: "8 lớn hơn 5 nên ta chọn dấu >."
+            },
+            {
+                id: 3,
+                text: "7 ☐ 7",
+                visual: null,
+                options: ["A. >", "B. <", "C. ="],
+                correctAnswer: 2,
+                explanation: "Hai số giống hệt nhau nên bằng nhau."
+            },
+            {
+                id: 4,
+                text: "Hãy chọn dấu đúng:",
+                visual: { left: "🍎🍎🍎", right: "🍎🍎🍎🍎🍎" },
+                options: ["A. >", "B. <", "C. ="],
+                correctAnswer: 1,
+                explanation: "3 quả táo ít hơn 5 quả táo nên ta chọn dấu <."
+            },
+            {
+                id: 5,
+                text: "9 ☐ 5",
+                visual: null,
+                options: ["A. >", "B. <", "C. ="],
+                correctAnswer: 0,
+                explanation: "9 lớn hơn 5 nên ta chọn dấu >."
+            },
+            {
+                id: 6,
+                text: "5 > ☐",
+                subtitle: "(Số nào bé hơn 5?)",
+                visual: null,
+                options: ["A. 6", "B. 4", "C. 7"],
+                correctAnswer: 1,
+                explanation: "5 lớn hơn 4 (hay 4 bé hơn 5)."
+            },
+            {
+                id: 7,
+                text: "10 ☐ 9",
+                visual: null,
+                options: ["A. >", "B. <", "C. ="],
+                correctAnswer: 0,
+                explanation: "10 lớn hơn 9 nên ta chọn dấu >."
+            },
+            {
+                id: 8,
+                text: "6 < ☐",
+                subtitle: "(Số nào lớn hơn 6?)",
+                visual: null,
+                options: ["A. 5", "B. 6", "C. 7"],
+                correctAnswer: 2,
+                explanation: "6 bé hơn 7."
+            },
+            {
+                id: 9,
+                text: "0 ☐ 1",
+                visual: null,
+                options: ["A. >", "B. <", "C. ="],
+                correctAnswer: 1,
+                explanation: "0 bé hơn 1 nên ta chọn dấu <."
+            },
+            {
+                id: 10,
+                text: "Hãy chọn dấu đúng:",
+                visual: { left: "🍬🍬🍬🍬", right: "🍬🍬🍬🍬" },
+                options: ["A. >", "B. <", "C. ="],
+                correctAnswer: 2,
+                explanation: "Hai bên đều có 4 viên kẹo, nên bằng nhau."
+            },
+            {
+                id: 11,
+                text: "☐ = 3",
+                subtitle: "(Số nào bằng 3?)",
+                visual: null,
+                options: ["A. 2", "B. 3", "C. 4"],
+                correctAnswer: 1,
+                explanation: "3 bằng 3."
+            },
+            {
+                id: 12,
+                text: "☐ > 8",
+                subtitle: "(Số nào lớn hơn 8?)",
+                visual: null,
+                options: ["A. 9", "B. 7", "C. 8"],
+                correctAnswer: 0,
+                explanation: "9 lớn hơn 8."
+            },
+            {
+                id: 13,
+                text: "2 ☐ 8",
+                visual: null,
+                options: ["A. >", "B. <", "C. ="],
+                correctAnswer: 1,
+                explanation: "2 bé hơn 8 nên ta chọn dấu <."
+            },
+            {
+                id: 14,
+                text: "9 < ☐",
+                subtitle: "(Số nào lớn hơn 9?)",
+                visual: null,
+                options: ["A. 8", "B. 9", "C. 10"],
+                correctAnswer: 2,
+                explanation: "9 bé hơn 10."
+            },
+            {
+                id: 15,
+                text: "☐ < 2",
+                subtitle: "(Số nào bé hơn 2?)",
+                visual: null,
+                options: ["A. 1", "B. 2", "C. 3"],
+                correctAnswer: 0,
+                explanation: "1 bé hơn 2."
+            }
+        ];
+
+        const AudioController = {
+            initialized: false,
+            synthCorrect: null,
+            synthWrong: null,
+            synthClick: null,
+            init: async function() {
+                if (this.initialized) return;
+                await Tone.start();
+                
+                // Âm thanh khi đúng (Vui vẻ, tươi sáng)
+                this.synthCorrect = new Tone.PolySynth(Tone.Synth).toDestination();
+                this.synthCorrect.volume.value = -5;
+                
+                // Âm thanh khi sai (Trầm, nhẹ nhàng)
+                this.synthWrong = new Tone.Synth({
+                    oscillator: { type: "triangle" },
+                    envelope: { attack: 0.1, decay: 0.2, sustain: 0.1, release: 0.5 }
+                }).toDestination();
+                this.synthWrong.volume.value = -2;
+                
+                // Âm thanh click
+                this.synthClick = new Tone.MembraneSynth().toDestination();
+                this.synthClick.volume.value = -10;
+                
+                this.initialized = true;
+            },
+            playCorrect: function() {
+                if (!this.initialized) return;
+                const now = Tone.now();
+                this.synthCorrect.triggerAttackRelease(["C5", "E5", "G5"], "8n", now);
+            },
+            playWrong: function() {
+                if (!this.initialized) return;
+                const now = Tone.now();
+                this.synthWrong.triggerAttackRelease("C3", "4n", now);
+            },
+            playClick: function() {
+                if (!this.initialized) return;
+                this.synthClick.triggerAttackRelease("C4", "32n");
+            }
+        };
+
+        const App = () => {
+            const [gameState, setGameState] = React.useState('start'); // 'start', 'playing', 'feedback', 'end'
+            const [currentQuestionIdx, setCurrentQuestionIdx] = React.useState(0);
+            const [score, setScore] = React.useState(0);
+            const [lastAnswerCorrect, setLastAnswerCorrect] = React.useState(false);
+            const [selectedOptionIdx, setSelectedOptionIdx] = React.useState(null);
+
+            const currentQuestion = questions[currentQuestionIdx];
+
+            const triggerConfetti = () => {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#FFC0CB', '#87CEEB', '#FFD700', '#98FB98']
+                });
+            };
+
+            const handleStart = async () => {
+                await AudioController.init();
+                AudioController.playClick();
+                setGameState('playing');
+                setScore(0);
+                setCurrentQuestionIdx(0);
+            };
+
+            const handleAnswer = (optionIndex) => {
+                AudioController.playClick();
+                const isCorrect = optionIndex === currentQuestion.correctAnswer;
+                setLastAnswerCorrect(isCorrect);
+                setSelectedOptionIdx(optionIndex);
+                
+                if (isCorrect) {
+                    AudioController.playCorrect();
+                    setScore(prev => prev + 1);
+                    triggerConfetti();
+                } else {
+                    AudioController.playWrong();
+                }
+                
+                setGameState('feedback');
+            };
+
+            const handleNextQuestion = () => {
+                AudioController.playClick();
+                if (currentQuestionIdx < questions.length - 1) {
+                    setCurrentQuestionIdx(prev => prev + 1);
+                    setGameState('playing');
+                } else {
+                    setGameState('end');
+                }
+            };
+
+            // Helper component for persistent header
+            const PersistentHeader = () => (
+                <div className="bg-pink-400 text-white text-center py-2 font-bold text-lg md:text-xl rounded-b-2xl shadow-md w-full max-w-md mx-auto sticky top-0 z-50">
+                    CÔ QUỲNH CHÚC CON HỌC GIỎI ❤️
+                </div>
+            );
+
+            // 1. Start Screen
+            if (gameState === 'start') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center">
+                        <PersistentHeader />
+                        <div className="flex-1 flex flex-col items-center justify-center p-4 w-full max-w-md mx-auto fade-in">
+                            <div className="bg-white p-8 rounded-3xl shadow-xl text-center w-full border-4 border-pink-200 float-anim">
+                                <div className="text-6xl mb-4">🐻🐰🐝</div>
+                                <h1 className="text-4xl font-black text-pink-500 mb-2 drop-shadow-sm">THỬ TÀI</h1>
+                                <h1 className="text-4xl font-black text-blue-500 mb-4 drop-shadow-sm">SO SÁNH SỐ</h1>
+                                <p className="text-xl text-gray-600 font-bold mb-8 bg-yellow-100 rounded-full py-2 px-4 inline-block">Ai nhanh – Ai đúng? 🌟</p>
+                                
+                                <button 
+                                    onClick={handleStart}
+                                    className="w-full bg-gradient-to-r from-pink-400 to-pink-500 text-white text-3xl font-black py-4 rounded-full shadow-[0_8px_0_rgb(219,39,119)] active:shadow-[0_0px_0_rgb(219,39,119)] active:translate-y-2 transition-all btn-bounce"
+                                >
+                                    BẮT ĐẦU!
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // 2. End Screen
+            if (gameState === 'end') {
+                let message = "";
+                let emoji = "";
+                if (score >= 13) {
+                    message = "🏆 Nhà toán học nhí xuất sắc!";
+                    emoji = "🥳🎉✨";
+                } else if (score >= 9) {
+                    message = "🌟 Em làm rất tốt!";
+                    emoji = "🥰👍";
+                } else if (score >= 5) {
+                    message = "🌱 Em đang tiến bộ!";
+                    emoji = "💪😊";
+                } else {
+                    message = "💛 Cùng luyện thêm một lần nữa nhé!";
+                    emoji = "🤗📚";
+                }
+
+                return (
+                    <div className="min-h-screen flex flex-col items-center">
+                        <PersistentHeader />
+                        <div className="flex-1 flex flex-col items-center justify-center p-4 w-full max-w-md mx-auto fade-in">
+                            <div className="bg-white p-8 rounded-3xl shadow-xl text-center w-full border-4 border-yellow-200">
+                                <h2 className="text-3xl font-black text-gray-800 mb-4">KẾT QUẢ</h2>
+                                <div className="text-6xl mb-4">{emoji}</div>
+                                <div className="flex justify-center items-center gap-2 mb-4">
+                                    <span className="text-5xl font-black text-yellow-500">{score}</span>
+                                    <span className="text-3xl text-gray-600 font-bold">/ 15 Ngôi sao 🌟</span>
+                                </div>
+                                <p className="text-2xl text-pink-500 font-bold mb-8">{message}</p>
+                                
+                                <button 
+                                    onClick={handleStart}
+                                    className="w-full bg-blue-400 text-white text-2xl font-black py-4 rounded-full shadow-[0_8px_0_rgb(59,130,246)] active:shadow-[0_0px_0_rgb(59,130,246)] active:translate-y-2 transition-all btn-bounce"
+                                >
+                                    🔄 CHƠI LẠI NÀO!
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // 3. Playing & Feedback Screens
+            return (
+                <div className="min-h-screen flex flex-col items-center">
+                    <PersistentHeader />
+                    
+                    <div className="w-full max-w-md px-4 mt-4 flex justify-between items-center">
+                        <div className="bg-white px-4 py-2 rounded-full shadow text-pink-500 font-bold text-lg border-2 border-pink-200">
+                            Câu: {currentQuestionIdx + 1} / 15
+                        </div>
+                        <div className="bg-white px-4 py-2 rounded-full shadow text-yellow-500 font-bold text-lg border-2 border-yellow-200">
+                            ⭐ {score}
+                        </div>
+                    </div>
+
+                    <div className="flex-1 w-full max-w-md p-4 flex flex-col">
+                        {/* Question Card */}
+                        <div className="bg-white rounded-3xl shadow-lg p-6 mb-6 border-4 border-blue-100 flex-1 flex flex-col items-center justify-center relative fade-in">
+                            
+                            <h2 className="text-4xl md:text-5xl font-black text-gray-800 text-center mb-2">
+                                {currentQuestion.text}
+                            </h2>
+                            
+                            {currentQuestion.subtitle && (
+                                <p className="text-xl text-gray-500 font-bold mb-4">{currentQuestion.subtitle}</p>
+                            )}
+
+                            {/* Visual Content (Emojis) */}
+                            {currentQuestion.visual && (
+                                <div className="flex items-center justify-center gap-4 my-6 bg-gray-50 p-4 rounded-2xl w-full border-2 border-dashed border-gray-300">
+                                    <div className="text-4xl text-center leading-relaxed max-w-[120px]">{currentQuestion.visual.left}</div>
+                                    <div className="text-4xl font-black text-gray-400">?</div>
+                                    <div className="text-4xl text-center leading-relaxed max-w-[120px]">{currentQuestion.visual.right}</div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Options Buttons */}
+                        <div className="grid grid-cols-1 gap-4 mb-4">
+                            {currentQuestion.options.map((option, idx) => {
+                                // Define colors based on position to make it colorful
+                                const colors = [
+                                    "bg-blue-100 border-blue-400 text-blue-700 shadow-[0_6px_0_rgb(96,165,250)]", 
+                                    "bg-pink-100 border-pink-400 text-pink-700 shadow-[0_6px_0_rgb(244,114,182)]", 
+                                    "bg-yellow-100 border-yellow-400 text-yellow-700 shadow-[0_6px_0_rgb(250,204,21)]"
+                                ];
+                                
+                                return (
+                                    <button
+                                        key={idx}
+                                        onClick={() => gameState === 'playing' && handleAnswer(idx)}
+                                        disabled={gameState !== 'playing'}
+                                        className={`w-full text-3xl font-black py-4 px-6 rounded-2xl border-4 ${colors[idx]} transition-all btn-bounce active:translate-y-1.5 active:shadow-none flex items-center justify-center ${gameState !== 'playing' ? 'opacity-50 cursor-not-allowed' : 'opacity-100'}`}
+                                    >
+                                        {option}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Feedback Modal Overlay */}
+                    {gameState === 'feedback' && (
+                        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 fade-in">
+                            <div className="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl relative border-4 border-white">
+                                {lastAnswerCorrect ? (
+                                    <>
+                                        <div className="text-6xl mb-2">🎉</div>
+                                        <h3 className="text-3xl font-black text-green-500 mb-2">Tuyệt vời!</h3>
+                                        <p className="text-xl text-gray-700 font-bold mb-6">{currentQuestion.explanation}</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="text-6xl mb-2">🌱</div>
+                                        <h3 className="text-3xl font-black text-orange-500 mb-2">Thử lại nhé!</h3>
+                                        <p className="text-xl text-gray-700 font-bold mb-6">Chưa đúng rồi. {currentQuestion.explanation}</p>
+                                    </>
+                                )}
+                                
+                                <button 
+                                    onClick={handleNextQuestion}
+                                    className="w-full bg-green-400 text-white text-2xl font-black py-4 rounded-full shadow-[0_6px_0_rgb(74,222,128)] active:shadow-[0_0px_0_rgb(74,222,128)] active:translate-y-1.5 btn-bounce transition-all"
+                                >
+                                    {currentQuestionIdx < questions.length - 1 ? "CÂU TIẾP THEO ➡" : "XEM KẾT QUẢ 🏆"}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
